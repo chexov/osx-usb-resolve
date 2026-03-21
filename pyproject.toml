@@ -1,0 +1,26 @@
+[project]
+name = "osx-usb-resolve"
+version = "0.1.0"
+description = "Resolve macOS USB devices to /dev/cu.* paths by serial number or product name"
+authors = [{name = "Anton P. Linevich", email = "anton@linevihc.com"}]
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+keywords = ["macos", "usb", "serial", "device", "resolve"]
+classifiers = [
+    "Operating System :: MacOS",
+    "Environment :: Console",
+    "Topic :: System :: Hardware :: Universal Serial Bus (USB)",
+    "Topic :: Utilities",
+]
+
+[project.scripts]
+usb-resolve = "usb_resolve:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+include = ["usb_resolve.py"]
