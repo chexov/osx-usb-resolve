@@ -37,6 +37,10 @@ def get_usb_devices():
                 loc_hex = ""
                 if isinstance(loc, str):
                     loc_hex = loc.split()[0].replace("0x", "")
+                    # macOS names /dev/cu.* from the location as an int, so
+                    # drop leading zeros ("01140000" -> "1140000")
+                    if loc_hex:
+                        loc_hex = "%x" % int(loc_hex, 16)
                 elif isinstance(loc, int):
                     loc_hex = "%x" % loc
                 devices.append({"name": name, "serial": serial, "location": loc_hex})
@@ -47,12 +51,16 @@ def get_usb_devices():
     return devices
 
 
-def location_to_devs(location):
-    """Find /dev/cu.usbmodem* paths matching a USB location ID."""
+def location_to_devs(location, serial=""):
+    """Find /dev/cu.usbmodem* paths matching a USB location ID or serial number."""
+    devs = []
     prefix = location.rstrip("0")
-    if not prefix:
-        return []
-    return sorted(glob.glob("/dev/cu.usbmodem%s*" % prefix))
+    if prefix:
+        devs = sorted(glob.glob("/dev/cu.usbmodem%s*" % prefix))
+    # macOS sometimes names ports by serial number instead of location
+    if not devs and serial:
+        devs = sorted(glob.glob("/dev/cu.usbmodem%s*" % serial))
+    return devs
 
 
 def main():
@@ -72,7 +80,7 @@ def main():
 
     if args.list:
         for d in devices:
-            devs = location_to_devs(d["location"])
+            devs = location_to_devs(d["location"], d["serial"])
             ports = ", ".join(devs) if devs else "(no serial port)"
             print("%s  serial=%s  %s" % (d["name"], d["serial"], ports))
         return
@@ -98,7 +106,7 @@ def main():
         print("device not found: %s" % key, file=sys.stderr)
         sys.exit(1)
 
-    devs = location_to_devs(match["location"])
+    devs = location_to_devs(match["location"], match["serial"])
     if not devs:
         print("no /dev/cu.* port for %s" % match["name"], file=sys.stderr)
         sys.exit(1)

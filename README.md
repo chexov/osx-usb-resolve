@@ -24,12 +24,20 @@ mavproxy.py --master $(usb-resolve --by-iname tracker)
 
 ## Install
 
+### Homebrew
+
+```bash
+brew install chexov/tools/usb-resolve
 ```
+
+### pip / uv
+
+```bash
 pip install osx-usb-resolve
 ```
 
 Or with [uv](https://docs.astral.sh/uv/):
-```
+```bash
 uv tool install osx-usb-resolve
 ```
 
