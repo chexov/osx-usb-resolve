@@ -18,8 +18,16 @@ import sys
 
 def get_usb_devices():
     """Parse system_profiler for USB devices with serial numbers."""
+    devices = _get_usb_devices("SPUSBDataType")
+    # macOS 26+ leaves SPUSBDataType empty; data moved to SPUSBHostDataType
+    if not devices:
+        devices = _get_usb_devices("SPUSBHostDataType")
+    return devices
+
+
+def _get_usb_devices(data_type):
     raw = subprocess.check_output(
-        ["system_profiler", "SPUSBDataType", "-xml"], stderr=subprocess.DEVNULL
+        ["system_profiler", data_type, "-xml"], stderr=subprocess.DEVNULL
     )
     data = plistlib.loads(raw)
     devices = []
@@ -31,9 +39,9 @@ def get_usb_devices():
             if not isinstance(item, dict):
                 continue
             name = item.get("_name", "")
-            serial = item.get("serial_num", "")
-            loc = item.get("location_id", "")
-            if serial:
+            serial = item.get("serial_num") or item.get("USBDeviceKeySerialNumber", "")
+            loc = item.get("location_id") or item.get("USBKeyLocationID", "")
+            if serial and serial != "Not Provided":
                 loc_hex = ""
                 if isinstance(loc, str):
                     loc_hex = loc.split()[0].replace("0x", "")
